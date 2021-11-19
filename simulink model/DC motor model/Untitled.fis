@@ -1,0 +1,46 @@
+[System]
+Name='Untitled'
+Type='mamdani'
+Version=2.0
+NumInputs=2
+NumOutputs=1
+NumRules=0
+AndMethod='min'
+OrMethod='max'
+ImpMethod='min'
+AggMethod='max'
+DefuzzMethod='centroid'
+
+[Input1]
+Name='input1'
+Range=[0 1]
+NumMFs=7
+MF1='PB':'trimf',[-240 -180 -120]
+MF2='NM':'trimf',[-180 -120 -60]
+MF3='NS':'trimf',[-120 -60 0]
+MF4='ZO':'trimf',[-60 0 60]
+MF5='PS':'trimf',[0 60 120]
+MF6='PM':'trimf',[60 120 180]
+MF7='PB':'trimf',[120 180 240]
+
+[Input2]
+Name='input2'
+Range=[0 1]
+NumMFs=7
+MF1='NS':'trimf',[-240 -180 -120]
+MF2='NM':'trimf',[-180 -120 -60]
+MF3='NS':'trimf',[-120 -60 0]
+MF4='ZO':'trimf',[-60 0 60]
+MF5='PS':'trimf',[0 60 120]
+MF6='mf6':'trimf',[60 120 180]
+MF7='PB':'trimf',[120 180 240]
+
+[Output1]
+Name='output1'
+Range=[0 1]
+NumMFs=3
+MF1='NB':'trimf',[-120 -60 0]
+MF2='mf2':'trimf',[-60 0 60]
+MF3='mf3':'trimf',[0 60 120]
+
+[Rules]

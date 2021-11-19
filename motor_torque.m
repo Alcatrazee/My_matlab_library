@@ -2,11 +2,11 @@ close all
 clear
 clc
 %% motor parameter
-V = 12;
-no_load_speed = 960;  %rpm    can be measured by giving nominal votage and measure the velocity
-no_load_current = 0.1;    %  can be measured by current meter when dry running
-stall_torque = 0.04;    %  can be measured by a weight scale
-stall_current = 1.2;      %  can be measured by current meter when roter stalled
+V = 24;
+no_load_speed = 388;  %rpm    can be measured by giving nominal votage and measure the velocity
+no_load_current = 0.2;    %  can be measured by current meter when dry running
+stall_torque = 9.6;    %  can be measured by a weight scale(Nm)
+stall_current = 16;      %  can be measured by current meter when roter stalled
 %% calculation
 % calculated parameter
 tao = linspace(0,stall_torque,500);

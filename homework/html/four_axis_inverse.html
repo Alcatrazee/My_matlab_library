@@ -1,0 +1,366 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>four_axis_inverse</title><meta name="generator" content="MATLAB 9.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-11-30"><meta name="DC.source" content="four_axis_inverse.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%    version 2.0</span>
+<span class="comment">%    function : calculate the inverse kinematic of SCARA</span>
+<span class="comment">%    difference: only calculate the joint angle ,let the hight equal to the</span>
+<span class="comment">%    target hight</span>
+<span class="comment">%&#38656;&#35201;&#26377;&#22352;&#26631;&#21407;&#22411;</span>
+clear;
+clc
+E=0.01;                                                     <span class="comment">%epsilo:error limit of the literate</span>
+<span class="comment">%constrain of angle of AH-450 and l4</span>
+AH_MAX_t1=deg2rad(135);
+AH_MIN_t1=deg2rad(-135);
+AH_MAX_t2=deg2rad(150);
+AH_MIN_t2=deg2rad(-150);
+AH_MAX_t4=-70;
+AH_MIN_t4=-195;
+<span class="comment">%parameter of AH-450</span>
+AH_l0=343;
+AH_l1=200;
+AH_l2=250;
+AH_t4=0;
+<span class="comment">%omega:w of AH-450</span>
+AH_o1=[0 0 1]';
+AH_o2=[0 0 1]';
+AH_o3=[0 0 1]';
+AH_o4=[0 0 0]';
+<span class="comment">%q</span>
+AH_q1=[0 0 0]';
+AH_q2=[0 AH_l1 0]';
+AH_q3=[0 AH_l1+AH_l2 0]';
+AH_q4=[0 0 0]';
+<span class="comment">%initial state</span>
+AH_theta_0=[0 0 0 0]';
+AH_gst_0=[1 0 0 0;0 1 0 AH_l1+AH_l2;0 0 1 325;0 0 0 1];
+AH_gd=[    0.1564   -0.9877         0    0
+           0.9877    0.1564         0   200
+                0         0    1.0000  300.0000
+                0         0         0    1.0000];
+<span class="comment">%       f(x)=exp_1*exp_2*exp_3*exp_4*g_st0*g_d-1</span>
+AH_theta=AH_theta_0;
+figure(1);
+<span class="keyword">for</span> t=1:100
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%four axis%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    AH_t1=AH_theta(1,1);
+    AH_t2=AH_theta(2,1);
+    AH_t3=AH_theta(3,1);
+    AH_t4=AH_theta(4,1);
+    <span class="comment">%work out Rotation matrix</span>
+    AH_R1=e_ro(AH_o1,AH_t1);
+    AH_R2=e_ro(AH_o2,AH_t2);
+    AH_R3=e_ro(AH_o3,AH_t3);
+    AH_R4=eye(3);
+    <span class="comment">%work out v</span>
+    AH_v1=-cross(AH_o1,AH_q1);
+    AH_v2=-cross(AH_o2,AH_q2);
+    AH_v3=-cross(AH_o3,AH_q3);
+    AH_v4=[0 0 1]';
+    <span class="comment">%work out espi</span>
+    AH_espi1=make_epsi(AH_v1,AH_o1);
+    AH_espi2=make_epsi(AH_v2,AH_o2);
+    AH_espi3=make_epsi(AH_v3,AH_o3);
+    AH_espi4=[AH_v4' AH_o4']';
+    <span class="comment">%work out p</span>
+    AH_p1=twist_p(AH_o1,AH_v1,AH_t1);
+    AH_p2=twist_p(AH_o2,AH_v2,AH_t2);
+    AH_p3=twist_p(AH_o3,AH_v3,AH_t3);
+    AH_p4=[0 0 AH_t4]';
+    <span class="comment">%work out the exponential</span>
+    AH_exp_1=make_exp(AH_R1,AH_p1);
+    AH_exp_2=make_exp(AH_R2,AH_p2);
+    AH_exp_3=make_exp(AH_R3,AH_p3);
+    AH_exp_4=make_exp(AH_R4,AH_p4);
+    <span class="comment">%get phi(theta_k)</span>
+    AH_epsi_thk=vee(logm(AH_exp_1*AH_exp_2*AH_exp_3*AH_exp_4*AH_gst_0/AH_gd));
+    <span class="comment">%get Jacobian</span>
+    AH_Jacobian=AH_get_Jacobian([AH_espi1 AH_espi2 AH_espi3 AH_espi4],AH_exp_1,AH_exp_2,AH_exp_3);
+    <span class="comment">%get pseudo Jacobian</span>
+    AH_ps_Jacobian=pinv(AH_Jacobian);
+    <span class="comment">%get theta_k+1</span>
+    AH_theta=AH_theta-AH_ps_Jacobian*AH_epsi_thk;
+    Norm_of_phi=norm(AH_epsi_thk);
+    <span class="comment">%calculate</span>
+<span class="comment">%     stem(t,Norm_of_phi);</span>
+<span class="comment">%     hold on</span>
+    <span class="keyword">if</span> Norm_of_phi&lt;E
+        <span class="keyword">break</span>;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> t==100
+   error(<span class="string">'coordinate out of workspace!!!'</span>)
+<span class="keyword">end</span>
+
+AH_t1=AH_theta(1,1);
+AH_t2=AH_theta(2,1);
+AH_t3=AH_theta(3,1);
+AH_t4=AH_theta(4,1);
+vector_theta=set_right_angle_four_axis([AH_t1 AH_t2 AH_t3 AH_t4]');
+AH_t1=vector_theta(1,1);
+AH_t2=vector_theta(2,1);
+AH_t3=vector_theta(3,1);
+AH_t4=vector_theta(4,1);
+<span class="comment">%work out Rotation matrix</span>
+AH_R1=e_ro(AH_o1,AH_t1);
+AH_R2=e_ro(AH_o2,AH_t2);
+AH_R3=e_ro(AH_o3,AH_t3);
+AH_R4=eye(3);
+<span class="comment">%work out v</span>
+AH_v1=-cross(AH_o1,AH_q1);
+AH_v2=-cross(AH_o2,AH_q2);
+AH_v3=-cross(AH_o3,AH_q3);
+AH_v4=[0 0 1]';
+<span class="comment">%work out espi</span>
+AH_espi1=make_epsi(AH_v1,AH_o1);
+AH_espi2=make_epsi(AH_v2,AH_o2);
+AH_espi3=make_epsi(AH_v3,AH_o3);
+AH_espi4=[AH_v4' AH_o4']';
+<span class="comment">%work out p</span>
+AH_p1=twist_p(AH_o1,AH_v1,AH_t1);
+AH_p2=twist_p(AH_o2,AH_v2,AH_t2);
+AH_p3=twist_p(AH_o3,AH_v3,AH_t3);
+AH_p4=[0 0 AH_t4]';
+<span class="comment">%work out the exponential</span>
+AH_exp_1=make_exp(AH_R1,AH_p1);
+AH_exp_2=make_exp(AH_R2,AH_p2);
+AH_exp_3=make_exp(AH_R3,AH_p3);
+AH_exp_4=make_exp(AH_R4,AH_p4);
+<span class="comment">%calculate the g_st_theta</span>
+AH_gst_theta=AH_exp_1*AH_exp_2*AH_exp_3*AH_exp_4*AH_gst_0;
+
+pos_joint_a = [0 0 AH_l0 1]';
+pos_joint_b = AH_exp_1*[0 AH_l1 AH_l0 1]';
+pos_joint_c = pos_joint_b+[0 0 53 0]';
+pos_joint_d = AH_gst_theta(:,4);
+pos_joint_d(3,1)=395;
+pos_joint_e = AH_gst_theta(:,4);
+x=[0 pos_joint_a(1,1) pos_joint_b(1,1) pos_joint_c(1,1) pos_joint_d(1,1) pos_joint_e(1,1)];
+y=[0 pos_joint_a(2,1) pos_joint_b(2,1) pos_joint_c(2,1) pos_joint_d(2,1) pos_joint_e(2,1)];
+z=[0 pos_joint_a(3,1) pos_joint_b(3,1) pos_joint_c(3,1) pos_joint_d(3,1) pos_joint_e(3,1)];
+<span class="comment">%draw the 3d plot</span>
+figure(2)
+plot3(x,y,z,<span class="string">'-ro'</span>,<span class="string">'Linewidth'</span>,2);
+axis([-600 600 -600 600 0 735])
+xlabel(<span class="string">'x'</span>)
+ylabel(<span class="string">'y'</span>)
+hold <span class="string">on</span>
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="four_axis_inverse_01.png" alt=""> <img vspace="5" hspace="5" src="four_axis_inverse_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%    version 2.0
+%    function : calculate the inverse kinematic of SCARA 
+%    difference: only calculate the joint angle ,let the hight equal to the
+%    target hight
+%需要有坐标原型
+clear;
+clc
+E=0.01;                                                     %epsilo:error limit of the literate
+%constrain of angle of AH-450 and l4
+AH_MAX_t1=deg2rad(135);
+AH_MIN_t1=deg2rad(-135);
+AH_MAX_t2=deg2rad(150);
+AH_MIN_t2=deg2rad(-150);
+AH_MAX_t4=-70;
+AH_MIN_t4=-195;
+%parameter of AH-450
+AH_l0=343;
+AH_l1=200;
+AH_l2=250;
+AH_t4=0;
+%omega:w of AH-450
+AH_o1=[0 0 1]';
+AH_o2=[0 0 1]';
+AH_o3=[0 0 1]';
+AH_o4=[0 0 0]';
+%q
+AH_q1=[0 0 0]';
+AH_q2=[0 AH_l1 0]';
+AH_q3=[0 AH_l1+AH_l2 0]';
+AH_q4=[0 0 0]';
+%initial state
+AH_theta_0=[0 0 0 0]';
+AH_gst_0=[1 0 0 0;0 1 0 AH_l1+AH_l2;0 0 1 325;0 0 0 1];
+AH_gd=[    0.1564   -0.9877         0    0
+           0.9877    0.1564         0   200
+                0         0    1.0000  300.0000
+                0         0         0    1.0000];
+%       f(x)=exp_1*exp_2*exp_3*exp_4*g_st0*g_d-1
+AH_theta=AH_theta_0;
+figure(1);
+for t=1:100
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%four axis%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    AH_t1=AH_theta(1,1);
+    AH_t2=AH_theta(2,1);
+    AH_t3=AH_theta(3,1);
+    AH_t4=AH_theta(4,1);
+    %work out Rotation matrix
+    AH_R1=e_ro(AH_o1,AH_t1);
+    AH_R2=e_ro(AH_o2,AH_t2);
+    AH_R3=e_ro(AH_o3,AH_t3);
+    AH_R4=eye(3);
+    %work out v
+    AH_v1=-cross(AH_o1,AH_q1);
+    AH_v2=-cross(AH_o2,AH_q2);
+    AH_v3=-cross(AH_o3,AH_q3);
+    AH_v4=[0 0 1]';
+    %work out espi
+    AH_espi1=make_epsi(AH_v1,AH_o1);
+    AH_espi2=make_epsi(AH_v2,AH_o2);
+    AH_espi3=make_epsi(AH_v3,AH_o3);
+    AH_espi4=[AH_v4' AH_o4']';
+    %work out p
+    AH_p1=twist_p(AH_o1,AH_v1,AH_t1);
+    AH_p2=twist_p(AH_o2,AH_v2,AH_t2);
+    AH_p3=twist_p(AH_o3,AH_v3,AH_t3);
+    AH_p4=[0 0 AH_t4]';
+    %work out the exponential
+    AH_exp_1=make_exp(AH_R1,AH_p1);
+    AH_exp_2=make_exp(AH_R2,AH_p2);
+    AH_exp_3=make_exp(AH_R3,AH_p3);
+    AH_exp_4=make_exp(AH_R4,AH_p4);
+    %get phi(theta_k)
+    AH_epsi_thk=vee(logm(AH_exp_1*AH_exp_2*AH_exp_3*AH_exp_4*AH_gst_0/AH_gd));
+    %get Jacobian
+    AH_Jacobian=AH_get_Jacobian([AH_espi1 AH_espi2 AH_espi3 AH_espi4],AH_exp_1,AH_exp_2,AH_exp_3);
+    %get pseudo Jacobian
+    AH_ps_Jacobian=pinv(AH_Jacobian);
+    %get theta_k+1
+    AH_theta=AH_theta-AH_ps_Jacobian*AH_epsi_thk;
+    Norm_of_phi=norm(AH_epsi_thk);
+    %calculate
+%     stem(t,Norm_of_phi);
+%     hold on
+    if Norm_of_phi<E
+        break;
+    end
+end
+
+if t==100
+   error('coordinate out of workspace!!!') 
+end
+
+AH_t1=AH_theta(1,1);
+AH_t2=AH_theta(2,1);
+AH_t3=AH_theta(3,1);
+AH_t4=AH_theta(4,1);
+vector_theta=set_right_angle_four_axis([AH_t1 AH_t2 AH_t3 AH_t4]');
+AH_t1=vector_theta(1,1);
+AH_t2=vector_theta(2,1);
+AH_t3=vector_theta(3,1);
+AH_t4=vector_theta(4,1);
+%work out Rotation matrix
+AH_R1=e_ro(AH_o1,AH_t1);
+AH_R2=e_ro(AH_o2,AH_t2);
+AH_R3=e_ro(AH_o3,AH_t3);
+AH_R4=eye(3);
+%work out v
+AH_v1=-cross(AH_o1,AH_q1);
+AH_v2=-cross(AH_o2,AH_q2);
+AH_v3=-cross(AH_o3,AH_q3);
+AH_v4=[0 0 1]';
+%work out espi
+AH_espi1=make_epsi(AH_v1,AH_o1);
+AH_espi2=make_epsi(AH_v2,AH_o2);
+AH_espi3=make_epsi(AH_v3,AH_o3);
+AH_espi4=[AH_v4' AH_o4']';
+%work out p
+AH_p1=twist_p(AH_o1,AH_v1,AH_t1);
+AH_p2=twist_p(AH_o2,AH_v2,AH_t2);
+AH_p3=twist_p(AH_o3,AH_v3,AH_t3);
+AH_p4=[0 0 AH_t4]';
+%work out the exponential
+AH_exp_1=make_exp(AH_R1,AH_p1);
+AH_exp_2=make_exp(AH_R2,AH_p2);
+AH_exp_3=make_exp(AH_R3,AH_p3);
+AH_exp_4=make_exp(AH_R4,AH_p4);
+%calculate the g_st_theta
+AH_gst_theta=AH_exp_1*AH_exp_2*AH_exp_3*AH_exp_4*AH_gst_0;
+
+pos_joint_a = [0 0 AH_l0 1]';
+pos_joint_b = AH_exp_1*[0 AH_l1 AH_l0 1]';
+pos_joint_c = pos_joint_b+[0 0 53 0]';
+pos_joint_d = AH_gst_theta(:,4);
+pos_joint_d(3,1)=395;
+pos_joint_e = AH_gst_theta(:,4);
+x=[0 pos_joint_a(1,1) pos_joint_b(1,1) pos_joint_c(1,1) pos_joint_d(1,1) pos_joint_e(1,1)];
+y=[0 pos_joint_a(2,1) pos_joint_b(2,1) pos_joint_c(2,1) pos_joint_d(2,1) pos_joint_e(2,1)];
+z=[0 pos_joint_a(3,1) pos_joint_b(3,1) pos_joint_c(3,1) pos_joint_d(3,1) pos_joint_e(3,1)];
+%draw the 3d plot
+figure(2)
+plot3(x,y,z,'-ro','Linewidth',2);
+axis([-600 600 -600 600 0 735])
+xlabel('x')
+ylabel('y')
+hold on
+grid on
+
+
+##### SOURCE END #####
+--></body></html>

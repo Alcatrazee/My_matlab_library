@@ -1,0 +1,9 @@
+function blkStruct = slblock
+blkStruct.Name = ['DC_motor_subsystem_lib'];
+blkStruct.OpenFcn = 'DC_motor_subsystem_lib';
+Browser(1).Library = 'simulink';
+Browser(1).Name = 'Simulink';
+Browser(1).IsFlat = 0;
+Browser(2).Library = 'DC_motor_subsystem_lib';
+Browser(2).Name = 'DC_motor_subsystem_lib';
+Browser(2).IsFlat = 0;
